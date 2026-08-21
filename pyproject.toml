@@ -1,0 +1,37 @@
+[project]
+name = "python-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "aahsnr-common", email = "ahsan.05rahman@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
+    "rich>=15.0.0",
+]
+
+[project.scripts]
+python-project = "python_project:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipdb>=0.13.13",
+    "ipykernel>=7.3.0",
+    "ipython>=9.16.1",
+    "jupyterlab>=4.6.3",
+    "mypy>=2.3.1",
+    "numpy>=2.5.2",
+    "pandas>=3.0.5",
+    "passagemath-standard>=10.8.9",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.4",
+]
