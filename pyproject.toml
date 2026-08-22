@@ -31,7 +31,9 @@ dev = [
     "numpy>=2.5.2",
     "pandas>=3.0.5",
     "passagemath-standard>=10.8.9",
+    "pyrefly>=1.2.0",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
+    "quarto>=0.1.0",
     "ruff>=0.16.4",
 ]
