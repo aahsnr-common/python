@@ -1,0 +1,4 @@
+.direnv/
+.venv/
+uv.lock
+.python-version

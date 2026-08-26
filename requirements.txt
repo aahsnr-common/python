@@ -2,4 +2,3 @@ ruff
 pyrefly
 numpy
 matplotlib
-
