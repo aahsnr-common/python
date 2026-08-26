@@ -37,6 +37,11 @@ fi
 
 log() { printf '[update-python-env] %s\n' "$*"; }
 
+# Tracks whether any non-critical step failed so we still report it via the
+# exit code, without letting one bad step (e.g. a broken uv-installed tool)
+# abort the rest of the run under `set -e`.
+overall_status=0
+
 command -v uv >/dev/null 2>&1 || { echo "uv is not installed or not on PATH" >&2; exit 1; }
 
 log "starting maintenance run: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -77,20 +82,31 @@ fi
 # -----------------------------------------------------------------
 if [ -f "$REQ_FILE" ]; then
   log "upgrading libraries/tools from requirements.txt"
-  uv pip install --upgrade -r "$REQ_FILE" --python "$VENV_PY"
+  if ! uv pip install --upgrade -r "$REQ_FILE" --python "$VENV_PY"; then
+    log "WARNING: dependency upgrade failed — leaving existing packages in place"
+    overall_status=1
+  fi
 
   log "removing packages no longer listed in requirements.txt"
-  uv pip sync "$REQ_FILE" --python "$VENV_PY"
+  if ! uv pip sync "$REQ_FILE" --python "$VENV_PY"; then
+    log "WARNING: pruning unlisted packages failed"
+    overall_status=1
+  fi
 else
   log "no requirements.txt found — skipping library upgrade"
 fi
 
 # -----------------------------------------------------------------
 # 4. Upgrade any CLI tools installed globally with `uv tool install`.
+#    Non-fatal: one broken tool shouldn't block Python cleanup / cache
+#    pruning below.
 # -----------------------------------------------------------------
 if [ -n "$(uv tool list 2>/dev/null || true)" ]; then
   log "upgrading uv-managed CLI tools"
-  uv tool upgrade --all
+  if ! uv tool upgrade --all; then
+    log "WARNING: one or more tool upgrades failed — continuing"
+    overall_status=1
+  fi
 fi
 
 # -----------------------------------------------------------------
@@ -102,7 +118,11 @@ installed_patches="$(uv python list --only-installed 2>/dev/null \
   | grep -o "cpython-${PY_VERSION//./\\.}\.[0-9]*" | sort -u || true)"
 
 if [ -n "$installed_patches" ]; then
-  current_patch="$(echo "$installed_patches" | sort -V | tail -n1)"
+  # sort -V (GNU-only) isn't available on macOS/BSD sort. Every line here
+  # is "cpython-MAJOR.MINOR.PATCH", so a numeric sort on the 3rd
+  # dot-separated field orders patches correctly (2 before 10) using only
+  # POSIX-standard sort flags.
+  current_patch="$(echo "$installed_patches" | sort -t. -k3,3n | tail -n1)"
   echo "$installed_patches" | grep -v "^${current_patch}$" | while read -r old; do
     ver="${old#cpython-}"
     log "uninstalling superseded Python ${ver}"
@@ -132,6 +152,10 @@ fi
 #    which wipes the whole cache and would slow down the next install).
 # -----------------------------------------------------------------
 log "pruning the uv cache"
-uv cache prune
+if ! uv cache prune; then
+  log "WARNING: cache prune failed"
+  overall_status=1
+fi
 
 log "maintenance run complete: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+exit "$overall_status"

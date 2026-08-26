@@ -1,4 +1,6 @@
 ruff
 pyrefly
+ty
 numpy
 matplotlib
+biopython
