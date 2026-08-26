@@ -1,6 +1,13 @@
-.venv/
+# direnv
 .direnv/
-.env
+.envrc-last-update
+.envrc-force-update
+
+# nix
+result
+result-*
+
+# uv / python
 __pycache__/
 *.pyc
-uv.lock
+.venv/
