@@ -1,6 +1,11 @@
 ruff
 pyrefly
-ty
+pytest
 numpy
 matplotlib
 biopython
+torch
+torchvision
+debugpy
+passagemath-standard
+jupyter
