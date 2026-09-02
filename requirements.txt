@@ -8,4 +8,5 @@ torch
 torchvision
 debugpy
 passagemath-standard
-jupyter
+ipykernel
+jupyterlab
